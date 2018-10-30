@@ -22,7 +22,7 @@ mongoose
 
 //Use Routes
 var routes = require('./routes/index');
-var users = require('./routes/users');
+//var users = require('./routes/users');
 
 //Passport init
 app.use(passport.initialize());
@@ -39,7 +39,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use('/', routes);
-app.use('/users', users);
+//app.use('/users', users);
 
 const port = process.env.PORT || 8080;
 
