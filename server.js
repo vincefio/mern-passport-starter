@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const path = require('path');
+const passport = require('passport')
 
 //const projects = require('./routes/api/projects')
 
@@ -20,7 +21,12 @@ mongoose
     .catch(err => console.log(err));
 
 //Use Routes
-//app.use('/', require('./routes'))
+var routes = require('./routes/index');
+var users = require('./routes/users');
+
+//Passport init
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === 'production') {
@@ -31,6 +37,9 @@ if (process.env.NODE_ENV === 'production') {
         res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
     });
 }
+
+app.use('/', routes);
+app.use('/users', users);
 
 const port = process.env.PORT || 8080;
 

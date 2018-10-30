@@ -3,7 +3,7 @@ var router = express.Router();
 
 // Get Homepage
 router.get('/', function (req, res) {
-    res.send('initial get route working');
+    res.send('initial users get route working');
 });
 
 
