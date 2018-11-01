@@ -5,9 +5,19 @@ var passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 
 // Get Homepage
-router.get('/', function (req, res) {
+/*router.get('/', ensureAuthenticated, function (req, res) {
     res.send('initial get route working');
-});
+});*/
+
+
+/*function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    } else {
+        //req.flash('error_msg','You are not logged in');
+        res.redirect('/users/login');
+    }
+}*/
 
 // this route is just used to get the user basic info
 router.get('/user', (req, res, next) => {
@@ -25,7 +35,7 @@ function ensureAuthenticated(req, res, next) {
         return next();
     } else {
         //req.flash('error_msg','You are not logged in');
-        res.redirect('/users/login');
+        res.redirect('/login');
     }
 }
 
@@ -49,7 +59,7 @@ router.post('/signup', (req, res) => {
     })
 })
 
-const strategy = new LocalStrategy(
+/*const strategy = new LocalStrategy(
     {
         usernameField: 'username' // not necessary, DEFAULT
     },
@@ -67,7 +77,24 @@ const strategy = new LocalStrategy(
             return done(null, userMatch)
         })
     }
-)
+)*/
+
+passport.use(new LocalStrategy(
+    //this username and password is from the req.body i believee
+    function (username, password, done) {
+        User.findOne({ 'local.username': username }, (err, userMatch) => {
+            if (err) {
+                return done(err)
+            }
+            if (!userMatch) {
+                return done(null, false, { message: 'Incorrect username' })
+            }
+            if (!userMatch.checkPassword(password)) {
+                return done(null, false, { message: 'Incorrect password' })
+            }
+            return done(null, userMatch)
+        })
+    }));
 
 // ==== Register Strategies ====
 passport.use(LocalStrategy)
@@ -91,6 +118,36 @@ passport.deserializeUser((id, done) => {
             done(null, user)
         }
     )
+})
+
+router.post(
+    '/login',
+    function (req, res, next) {
+        console.log(req.body)
+        console.log('================')
+        next()
+    },
+    passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }),
+    (req, res) => {
+        console.log('POST to /login')
+        const user = JSON.parse(JSON.stringify(req.user)) // hack
+        const cleanUser = Object.assign({}, user)
+        if (cleanUser.local) {
+            console.log(`Deleting ${cleanUser.local.password}`)
+            delete cleanUser.local.password
+        }
+        res.json({ user: cleanUser })
+    }
+)
+
+router.post('/logout', (req, res) => {
+    if (req.user) {
+        req.session.destroy()
+        res.clearCookie('connect.sid') // clean up!
+        return res.json({ msg: 'logging you out' })
+    } else {
+        return res.json({ msg: 'no user to log out!' })
+    }
 })
 
 
